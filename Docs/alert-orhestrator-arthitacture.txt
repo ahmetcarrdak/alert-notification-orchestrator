@@ -1,0 +1,136 @@
+Platform Alert Orchestrator
+
+Readme.md
+- Amaç
+- Alarm Kriterleri
+- Kurulum 
+- Konfigrasyon
+- Riskler
+
+Neye İhtiyacımız Var:
+-- "Alermanager" Prometheus’tan gelen alertleri:
+- Gruplar
+- Route eder
+- Deduplicate eder
+- Silence yönetir
+- Webhook / email / Teams vs gönderir
+-- Escalation Engine
+Alarm Stack Edilmez İse
+- 1. kişiyi ara 
+- Açmazsa 5 dk sonra 2. kişiyi ara
+- Açmazsa Yöneticiyi ara
+-- Acknowledge Mekanizması
+- Alarmı alan kişinin aldığına dair onaylaması gerekmektedir
+-- Incident State Store
+- DB de tutlacak bir durum yönetim takip tablosu olacak
+ÖRN:
+{
+  "incidentId": "INC-2026-0001",
+  "service": "payment-service",
+  "severity": "critical",
+  "status": "ACKED",
+  "triggeredAt": "...",
+  "ackedAt": "...",
+  "resolvedAt": "...",
+  "escalationLevel": 1
+}
+
+
+
+
+Önemli Notlar: 
+- Sistemin çökmesine karşın ayrı bir servis olarak yazılmalıdır
+- İlk etapta Graphana ve Prometheus yapılandırılmalıdır
+- Hata mesajları herkese mi yoksa kişisel mi bildirileceği belirlenmelidir
+- Sistemin ne olacağı netleştirilmelidir (apiCall, Teams Message, Mail[önerilmez])
+- Ayrı servis mi yazılacak, ayrı endpointmi yapılandırılacak[önerilmez], ayrı bir proje mi olacak
+
+
+
+Eldeki Veriler;
+- Jeager
+- SEQ
+- Prometheus var /metrics endpoint açık ama kullanılmamış
+	- HTTP latency
+	- Error rate
+	- Status codes
+	- SQL süreleri
+	- GC, ThreadPool
+	- CPU / Memory
+	- gRPC & dış HTTP süreleri
+- OpenTelemetry altyapısı hazır
+
+
+	
+Eksik Veriler:
+- Prometheus yok
+- Alertmanager yok
+- Escalation engine yok
+- Acknowledge mekanizması yok
+- Call / SMS katmanı yok
+- Incident state store yok
+- Audit trail yok (kim ne zaman ack etti?)
+
+
+
+Mimari 
+
+Services (OTel)
+      │
+      ▼
+Prometheus
+      │
+      ▼
+Alertmanager
+      │
+      ▼
+Alert Orchestrator (ayrı container)
+      │
+      ├─ Teams
+      ├─ SMS
+      ├─ Voice Call
+      └─ Incident DB
+	  
+	  
+	  
+	  
+Önerilen Mimari
+	  
+┌─────────────────────────────┐
+│ Microservices (Aura + OTel) │
+└──────────────┬──────────────┘
+               │
+               ▼
+        Prometheus (metrics engine)
+               │
+               ▼
+        Alertmanager (routing)
+               │
+               ▼
+   Platform Alert Orchestrator  ← sizin yazacağınız servis
+               │
+     ┌─────────┼─────────┐
+     ▼         ▼         ▼
+   Teams      SMS       Voice
+                         Call
+               │
+               ▼
+        Incident State Store
+
+
+Alarm Lifecycle
+Prometheus detect eder
+        ↓
+Alertmanager route eder
+        ↓
+Incident oluşturulur (DB)
+        ↓
+Notification gönderilir
+        ↓
+ACK beklenir (örn 5 dk)
+        ↓
+ACK gelmezse escalation
+        ↓
+Resolved
+        ↓
+SLA raporu oluşturulur

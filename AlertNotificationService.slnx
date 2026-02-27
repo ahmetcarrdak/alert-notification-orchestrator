@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AlertNotificationService.API/AlertNotificationService.API.csproj" />
+    <Project Path="src/AlertNotificationService.Application/AlertNotificationService.Application.csproj" />
+    <Project Path="src/AlertNotificationService.Domain/AlertNotificationService.Domain.csproj" />
+    <Project Path="src/AlertNotificationService.Infrastructure/AlertNotificationService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AlertNotificationService.Application.Tests/AlertNotificationService.Application.Tests.csproj" />
+    <Project Path="tests/AlertNotificationService.Domain.Tests/AlertNotificationService.Domain.Tests.csproj" />
+    <Project Path="tests/AlertNotificationService.Infrastructure.Tests/AlertNotificationService.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

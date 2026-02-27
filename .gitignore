@@ -1,0 +1,53 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+
+# NuGet
+*.nupkg
+*.snupkg
+nuget.config.user
+
+# Test results
+TestResults/
+coverage*/
+*.trx
+*.coveragexml
+*.coverage
+
+# Publish output
+publish/
+*.pubxml
+!*.pubxml.user
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
