@@ -1,4 +1,5 @@
 using AlertNotificationService.Application.Alerts.Commands.ProcessAlertWebhook;
+using AlertNotificationService.Application.Alerts.Commands.ProcessWatchdog;
 using AlertNotificationService.Application.Common.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,17 @@ public class WebhookController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(new ProcessAlertWebhookCommand(payload), cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("watchdog")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ReceiveWatchdog(
+        [FromBody] AlertmanagerPayloadDto payload,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new ProcessWatchdogCommand(payload), cancellationToken);
         return Ok();
     }
 }

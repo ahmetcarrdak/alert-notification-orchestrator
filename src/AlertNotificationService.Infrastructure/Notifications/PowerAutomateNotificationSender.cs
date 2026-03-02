@@ -56,11 +56,68 @@ public class PowerAutomateNotificationSender : ITeamsNotificationSender
             payload.Status, payload.Alerts.Count);
     }
 
+    public async Task SendWatchdogAlertAsync(
+        string jobName,
+        DateTime lastSeen,
+        CancellationToken cancellationToken = default)
+    {
+        var card = new
+        {
+            type    = "AdaptiveCard",
+            version = "1.2",
+            body    = new List<object>
+            {
+                new
+                {
+                    type   = "TextBlock",
+                    text   = "⚠️ SERVIS YANIT VERMIYOR",
+                    size   = "Large",
+                    weight = "Bolder",
+                    color  = "Attention",
+                    wrap   = true
+                },
+                new
+                {
+                    type  = "Container",
+                    style = "attention",
+                    items = new List<object>
+                    {
+                        new
+                        {
+                            type = "FactSet",
+                            facts = new List<object>
+                            {
+                                new { title = "Servis",          value = jobName },
+                                new { title = "Son Sinyal",      value = $"{lastSeen:yyyy-MM-dd HH:mm:ss} UTC" },
+                                new { title = "Sessiz Suresi",   value = $"{(DateTime.UtcNow - lastSeen).TotalMinutes:F0} dakika" }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(card, SerializerOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync(_settings.WebhookUrl, content, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("Watchdog Teams alert failed. StatusCode: {StatusCode}, Body: {Body}",
+                (int)response.StatusCode, body);
+            return;
+        }
+
+        _logger.LogWarning("Watchdog alert sent to Teams for {Job}", jobName);
+    }
+
     private static object BuildPayload(AlertmanagerPayloadDto payload, IReadOnlyDictionary<string, string> logsByFingerprint)
     {
         var isFiring   = payload.Status.Equals("firing", StringComparison.OrdinalIgnoreCase);
         var statusIcon = isFiring ? "🔴" : "🟢";
-        var statusText = payload.Status.ToUpperInvariant();
+        var statusText = isFiring ? "YENİ HATA" : "HATA ÇÖZÜLDÜ";
 
         var bodyItems = new List<object>
         {

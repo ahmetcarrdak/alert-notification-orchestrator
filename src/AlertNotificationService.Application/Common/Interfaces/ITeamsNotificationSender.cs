@@ -8,4 +8,9 @@ public interface ITeamsNotificationSender
         AlertmanagerPayloadDto payload,
         IReadOnlyDictionary<string, string> logsByFingerprint,
         CancellationToken cancellationToken = default);
+
+    Task SendWatchdogAlertAsync(
+        string jobName,
+        DateTime lastSeen,
+        CancellationToken cancellationToken = default);
 }

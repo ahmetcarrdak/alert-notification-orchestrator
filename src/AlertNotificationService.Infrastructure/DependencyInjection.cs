@@ -5,6 +5,7 @@ using AlertNotificationService.Infrastructure.Logs;
 using AlertNotificationService.Infrastructure.Notifications;
 using AlertNotificationService.Infrastructure.Repositories;
 using AlertNotificationService.Infrastructure.Settings;
+using AlertNotificationService.Infrastructure.Watchdog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,9 @@ public static class DependencyInjection
 
         services.Configure<SeqSettings>(configuration.GetSection(SeqSettings.SectionName));
         services.AddHttpClient<ISeqLogFetcher, SeqLogFetcher>();
+
+        services.AddSingleton<IWatchdogTracker, WatchdogTracker>();
+        services.AddHostedService<WatchdogMonitorService>();
 
         return services;
     }
