@@ -5,8 +5,8 @@ stages:
   - deploy
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  DOCKER_IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+  DOCKER_IMAGE: $DOCKER_USER/alert-notification-service:$CI_COMMIT_SHORT_SHA
+  DOCKER_IMAGE_LATEST: $DOCKER_USER/alert-notification-service:latest
 
 # --- BUILD ---
 build:
@@ -38,17 +38,15 @@ test:
 # --- DOCKER BUILD & PUSH ---
 docker:
   stage: docker
-  image: docker:24-dind
-  services:
-    - docker:24-dind
+  image: docker:27
   variables:
-    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: unix:///var/run/docker.sock
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin
   script:
-    - docker build -t $DOCKER_IMAGE -t $DOCKER_IMAGE_LATEST .
-    - docker push $DOCKER_IMAGE
-    - docker push $DOCKER_IMAGE_LATEST
+    - docker build -t $DOCKER_USER/alert-notification-service:$CI_COMMIT_SHORT_SHA -t $DOCKER_USER/alert-notification-service:latest .
+    - docker push $DOCKER_USER/alert-notification-service:$CI_COMMIT_SHORT_SHA
+    - docker push $DOCKER_USER/alert-notification-service:latest
   only:
     - main
 
@@ -64,14 +62,15 @@ deploy:
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
   script:
     - ssh $DEPLOY_USER@$DEPLOY_HOST "
-        cd $DEPLOY_PATH &&
-        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
-        docker compose pull api &&
-        docker compose up -d --no-deps api &&
-        docker network connect alert-notification-service_default alertmanager || true
+      cd $DEPLOY_PATH &&
+      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+      docker compose pull api &&
+      docker compose up -d --no-deps api &&
+      docker network connect alert-notification-service_default alertmanager || true
       "
   only:
     - main
   when: manual
   environment:
     name: production
+    
